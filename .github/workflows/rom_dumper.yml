@@ -91,6 +91,7 @@ jobs:
         git config --global user.name "${{ env.UN }}"
         git config --global user.email "${{ env.UEM }}"
         git config --global http.postBuffer 1572864000
+        git config --global core.compression 0
         unset GITHUB_TOKEN
         gh auth login --with-token <<< "${{ secrets.GTOKEN }}"
 
@@ -190,6 +191,11 @@ jobs:
         git add .
         git commit -s -m "Dump for $brand $codename"
         gh repo create dump_"$brand"_"$codename" --public --description="$description" --source=. --remote=origin --push
+        if ! gh repo create dump_"$brand"_"$codename" --public --description="$description" --source=. --remote=origin --push; then
+        echo "Retrying git push..."
+            sleep 15
+            git push origin dump-"$codename"-"$dat" --force || exit 1
+        fi
         cd /home/Auto-Dumper
         mkdir vnd_project
         mkdir vnd_project/dump
